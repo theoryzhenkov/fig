@@ -1,8 +1,8 @@
 [package]
-name = "mk"
+name = "slap"
 version = "0.1.0"
 edition = "2024"
-description = "A simple tool to create files and directories"
+description = "Create files and directories with ease - touch, but slappier"
 license = "MIT"
 
 [dependencies]

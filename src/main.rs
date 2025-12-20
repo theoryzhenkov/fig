@@ -6,8 +6,8 @@ use std::process::Command;
 use tempfile::TempDir;
 
 #[derive(Parser)]
-#[command(name = "mk")]
-#[command(about = "Create files and directories with ease")]
+#[command(name = "slap")]
+#[command(about = "Create files and directories with ease - touch, but slappier")]
 struct Cli {
     /// Print created paths to stdout
     #[arg(short = 'p')]

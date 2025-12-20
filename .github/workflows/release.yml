@@ -36,16 +36,16 @@ jobs:
       - name: Create tarball
         run: |
           cd target/${{ matrix.target }}/release
-          tar -czvf mk-${{ matrix.suffix }}.tar.gz mk
-          shasum -a 256 mk-${{ matrix.suffix }}.tar.gz > mk-${{ matrix.suffix }}.tar.gz.sha256
+          tar -czvf slap-${{ matrix.suffix }}.tar.gz slap
+          shasum -a 256 slap-${{ matrix.suffix }}.tar.gz > slap-${{ matrix.suffix }}.tar.gz.sha256
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mk-${{ matrix.suffix }}
+          name: slap-${{ matrix.suffix }}
           path: |
-            target/${{ matrix.target }}/release/mk-${{ matrix.suffix }}.tar.gz
-            target/${{ matrix.target }}/release/mk-${{ matrix.suffix }}.tar.gz.sha256
+            target/${{ matrix.target }}/release/slap-${{ matrix.suffix }}.tar.gz
+            target/${{ matrix.target }}/release/slap-${{ matrix.suffix }}.tar.gz.sha256
 
   release:
     needs: build
@@ -59,7 +59,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            mk-arm64/mk-arm64.tar.gz
-            mk-arm64/mk-arm64.tar.gz.sha256
-            mk-x86_64/mk-x86_64.tar.gz
-            mk-x86_64/mk-x86_64.tar.gz.sha256
+            slap-arm64/slap-arm64.tar.gz
+            slap-arm64/slap-arm64.tar.gz.sha256
+            slap-x86_64/slap-x86_64.tar.gz
+            slap-x86_64/slap-x86_64.tar.gz.sha256
