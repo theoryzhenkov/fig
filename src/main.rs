@@ -1,21 +1,37 @@
 mod cli;
+mod completions;
 mod config;
 mod create;
 mod open;
 
 use clap::Parser;
 
-use cli::Cli;
+use cli::{Cli, Commands};
 use config::Config;
 
 fn main() {
+    // Prevent scary panics when stdout is a pipe and the reader exits early (e.g. `slap completions fish | head`).
+    // This matches the behavior of many Unix CLIs: writing to a closed pipe terminates the process via SIGPIPE.
+    #[cfg(unix)]
+    unsafe {
+        libc::signal(libc::SIGPIPE, libc::SIG_DFL);
+    }
+
     let cli = Cli::parse();
+
+    if let Some(Commands::Completions { shell }) = cli.command {
+        completions::print(shell);
+        return;
+    }
+
     let config = Config::load();
 
     // If no paths provided and not in temp mode, print usage and exit
     if cli.paths.is_empty() && !cli.temp_mode {
         eprintln!("slap: no paths provided");
-        eprintln!("Usage: slap [OPTIONS] [PATHS]...");
+        eprintln!("Usage:");
+        eprintln!("  slap [OPTIONS] [PATHS]...");
+        eprintln!("  slap completions <bash|zsh|fish>");
         eprintln!();
         eprintln!("Options:");
         eprintln!("  -p          Print created paths to stdout");

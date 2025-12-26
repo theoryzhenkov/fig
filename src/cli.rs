@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{Parser, Subcommand, ValueEnum};
 
 const AFTER_HELP: &str = "\
 CONFIGURATION:
@@ -25,6 +25,9 @@ EXAMPLES:
 #[command(about = "Create files and directories with ease - touch, but slappier")]
 #[command(after_help = AFTER_HELP)]
 pub struct Cli {
+    #[command(subcommand)]
+    pub command: Option<Commands>,
+
     /// Print created paths to stdout
     #[arg(short = 'p')]
     pub print_path: bool,
@@ -44,6 +47,22 @@ pub struct Cli {
     /// Paths to create
     #[arg(trailing_var_arg = true)]
     pub paths: Vec<String>,
+}
+
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Generate shell completion scripts (prints to stdout)
+    Completions {
+        #[arg(value_enum)]
+        shell: CompletionShell,
+    },
+}
+
+#[derive(Clone, Copy, Debug, ValueEnum)]
+pub enum CompletionShell {
+    Bash,
+    Zsh,
+    Fish,
 }
 
 impl Cli {
