@@ -8,3 +8,6 @@ license = "MIT"
 [dependencies]
 clap = { version = "4", features = ["derive"] }
 tempfile = "3"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+dirs = "5"

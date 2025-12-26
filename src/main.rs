@@ -1,4 +1,5 @@
 use clap::Parser;
+use serde::Deserialize;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -30,8 +31,64 @@ struct Cli {
     paths: Vec<String>,
 }
 
+#[derive(Deserialize, Default)]
+struct Config {
+    tmpdir: Option<String>,
+}
+
+impl Config {
+    fn load() -> Self {
+        let mut config = Self::from_file().unwrap_or_default();
+        
+        if let Ok(tmpdir) = env::var("SLAP_TMPDIR") {
+            config.tmpdir = Some(tmpdir);
+        }
+        
+        config
+    }
+    
+    fn from_file() -> Option<Self> {
+        let config_dir = env::var("XDG_CONFIG_HOME")
+            .ok()
+            .map(PathBuf::from)
+            .or_else(|| dirs::home_dir().map(|h| h.join(".config")))?;
+        
+        let config_path = config_dir.join("slap").join("config.toml");
+        
+        let contents = fs::read_to_string(config_path).ok()?;
+        toml::from_str(&contents).ok()
+    }
+}
+
+fn create_temp_dir(config: &Config) -> std::io::Result<TempDir> {
+    if let Some(ref tmpdir_name) = config.tmpdir {
+        let base_tmpdir = env::temp_dir();
+        let normalized_name = tmpdir_name.strip_prefix('/').unwrap_or(tmpdir_name);
+        let custom_tmpdir = base_tmpdir.join(normalized_name);
+        
+        fs::create_dir_all(&custom_tmpdir)?;
+        tempfile::Builder::new().tempdir_in(custom_tmpdir)
+    } else {
+        TempDir::new()
+    }
+}
+
+fn create_temp_file(config: &Config) -> std::io::Result<tempfile::NamedTempFile> {
+    if let Some(ref tmpdir_name) = config.tmpdir {
+        let base_tmpdir = env::temp_dir();
+        let normalized_name = tmpdir_name.strip_prefix('/').unwrap_or(tmpdir_name);
+        let custom_tmpdir = base_tmpdir.join(normalized_name);
+        
+        fs::create_dir_all(&custom_tmpdir)?;
+        tempfile::Builder::new().tempfile_in(custom_tmpdir)
+    } else {
+        tempfile::NamedTempFile::new()
+    }
+}
+
 fn main() {
     let cli = Cli::parse();
+    let config = Config::load();
     let open_mode = cli.open_with.is_some();
     let open_with = cli.open_with.flatten();
 
@@ -41,17 +98,17 @@ fn main() {
         if cli.paths.is_empty() {
             // No paths: just create a temp file or dir
             if cli.dir_mode {
-                let dir = TempDir::new().expect("Failed to create temp directory");
+                let dir = create_temp_dir(&config).expect("Failed to create temp directory");
                 let path = dir.keep();
                 created.push(path);
             } else {
-                let file = tempfile::NamedTempFile::new().expect("Failed to create temp file");
+                let file = create_temp_file(&config).expect("Failed to create temp file");
                 let path = file.into_temp_path().keep().expect("Failed to persist temp file");
                 created.push(path);
             }
         } else {
             // Create temp base directory, then structure inside
-            let base = TempDir::new().expect("Failed to create temp directory");
+            let base = create_temp_dir(&config).expect("Failed to create temp directory");
             let base_path = base.keep();
 
             for path in &cli.paths {
