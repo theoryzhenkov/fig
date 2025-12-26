@@ -6,11 +6,11 @@ mod open;
 
 use clap::Parser;
 
-use cli::{Cli, Commands};
+use cli::{Cli, Commands, CreateArgs};
 use config::Config;
 
 fn main() {
-    // Prevent scary panics when stdout is a pipe and the reader exits early (e.g. `slap completions fish | head`).
+    // Prevent scary panics when stdout is a pipe and the reader exits early (e.g. `fig completions fish | head`).
     // This matches the behavior of many Unix CLIs: writing to a closed pipe terminates the process via SIGPIPE.
     #[cfg(unix)]
     unsafe {
@@ -19,52 +19,35 @@ fn main() {
 
     let cli = Cli::parse();
 
-    if let Some(Commands::Completions { shell }) = cli.command {
-        completions::print(shell);
-        return;
+    match cli.command {
+        Commands::Create(args) => run_create(args),
+        Commands::Completions { shell } => completions::print(shell),
     }
+}
 
+fn run_create(args: CreateArgs) {
     let config = Config::load();
 
-    // If no paths provided and not in temp mode, print usage and exit
-    if cli.paths.is_empty() && !cli.temp_mode {
-        eprintln!("slap: no paths provided");
-        eprintln!("Usage:");
-        eprintln!("  slap [OPTIONS] [PATHS]...");
-        eprintln!("  slap completions <bash|zsh|fish>");
-        eprintln!();
-        eprintln!("Options:");
-        eprintln!("  -p          Print created paths to stdout");
-        eprintln!("  -t          Create in a temporary directory");
-        eprintln!("  -d          Create directories instead of files");
-        eprintln!("  -o [APP]    Open created paths (with $EDITOR or specify app)");
-        eprintln!();
-        eprintln!("For more information, try 'slap --help'");
+    if args.paths.is_empty() && !args.temp_mode {
+        eprintln!("fig create: no paths provided");
+        eprintln!("For more information, try 'fig create --help'");
         std::process::exit(1);
     }
 
-    // Create paths
-    let created = if cli.temp_mode {
-        create::create_temp_paths(&config, &cli.paths, cli.dir_mode)
-            .expect("Failed to create paths")
+    let created = if args.temp_mode {
+        create::create_temp_paths(&config, &args.paths, args.dir_mode).expect("Failed to create paths")
     } else {
-        create::create_paths(&cli.paths, cli.dir_mode)
-            .expect("Failed to create paths")
+        create::create_paths(&args.paths, args.dir_mode).expect("Failed to create paths")
     };
 
-    // Print paths if -p flag or temp mode
-    if cli.print_path || cli.temp_mode {
+    if args.print_path || args.temp_mode {
         for p in &created {
             println!("{}", p.display());
         }
     }
 
-    // Open files if -o flag
-    if cli.open_mode() && !created.is_empty() {
-        // Warn about directories being opened
+    if args.open_mode() && !created.is_empty() {
         open::warn_about_directories(&created);
-
-        open::open_paths(&created, cli.open_app())
-            .expect("Failed to open paths");
+        open::open_paths(&created, args.open_app()).expect("Failed to open paths");
     }
 }

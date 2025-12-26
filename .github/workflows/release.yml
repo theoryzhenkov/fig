@@ -36,16 +36,16 @@ jobs:
       - name: Create tarball
         run: |
           cd target/${{ matrix.target }}/release
-          tar -czvf slap-${{ matrix.suffix }}.tar.gz slap
-          shasum -a 256 slap-${{ matrix.suffix }}.tar.gz > slap-${{ matrix.suffix }}.tar.gz.sha256
+          tar -czvf fig-${{ matrix.suffix }}.tar.gz fig
+          shasum -a 256 fig-${{ matrix.suffix }}.tar.gz > fig-${{ matrix.suffix }}.tar.gz.sha256
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: slap-${{ matrix.suffix }}
+          name: fig-${{ matrix.suffix }}
           path: |
-            target/${{ matrix.target }}/release/slap-${{ matrix.suffix }}.tar.gz
-            target/${{ matrix.target }}/release/slap-${{ matrix.suffix }}.tar.gz.sha256
+            target/${{ matrix.target }}/release/fig-${{ matrix.suffix }}.tar.gz
+            target/${{ matrix.target }}/release/fig-${{ matrix.suffix }}.tar.gz.sha256
 
   release:
     needs: build
@@ -59,7 +59,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            slap-arm64/slap-arm64.tar.gz
-            slap-arm64/slap-arm64.tar.gz.sha256
-            slap-x86_64/slap-x86_64.tar.gz
-            slap-x86_64/slap-x86_64.tar.gz.sha256
+            fig-arm64/fig-arm64.tar.gz
+            fig-arm64/fig-arm64.tar.gz.sha256
+            fig-x86_64/fig-x86_64.tar.gz
+            fig-x86_64/fig-x86_64.tar.gz.sha256

@@ -12,7 +12,7 @@ impl Config {
     pub fn load() -> Self {
         let mut config = Self::from_file().unwrap_or_default();
 
-        if let Ok(tmpdir) = env::var("SLAP_TMPDIR") {
+        if let Ok(tmpdir) = env::var("FIG_TMPDIR") {
             config.tmpdir = Some(tmpdir);
         }
 
@@ -25,7 +25,7 @@ impl Config {
             .map(PathBuf::from)
             .or_else(|| dirs::home_dir().map(|h| h.join(".config")))?;
 
-        let config_path = config_dir.join("slap").join("config.toml");
+        let config_path = config_dir.join("fig").join("config.toml");
 
         let contents = fs::read_to_string(config_path).ok()?;
         toml::from_str(&contents).ok()

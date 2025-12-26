@@ -1,33 +1,49 @@
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Parser, Subcommand, ValueEnum, ValueHint};
 
 const AFTER_HELP: &str = "\
 CONFIGURATION:
-    Config file: ~/.config/slap/config.toml (or $XDG_CONFIG_HOME/slap/config.toml)
+    Config file: ~/.config/fig/config.toml (or $XDG_CONFIG_HOME/fig/config.toml)
     
     Example config:
-        tmpdir = \"slap\"    # temp files go to /tmp/slap/.tmpXXXXXX
+        tmpdir = \"fig\"    # temp files go to /tmp/fig/.tmpXXXXXX
     
     Environment variables:
-        SLAP_TMPDIR    Override temp directory subdirectory
+        FIG_TMPDIR     Override temp directory subdirectory
         EDITOR         Editor for -o flag (default: vi)
 
 EXAMPLES:
-    slap src/main.rs           Create file (parents auto-created)
-    slap -d my_project/        Create directory
-    slap -t scratch.txt        Create temp file, print path
-    slap -o draft.md           Create and open in $EDITOR
-    slap -o=code file.rs       Create and open with specific app
-    cd $(slap -t -d)           cd into fresh temp directory";
+    fig create src/main.rs     Create file (parents auto-created)
+    fig c -d my_project/       Create directory
+    fig c -t scratch.txt       Create temp file, print path
+    fig c -o draft.md          Create and open in $EDITOR
+    fig c -o=code file.rs      Create and open with specific app
+    cd $(fig c -t -d)          cd into fresh temp directory";
 
 #[derive(Parser)]
-#[command(name = "slap")]
+#[command(name = "fig")]
 #[command(version)]
-#[command(about = "Create files and directories with ease - touch, but slappier")]
+#[command(about = "Stupid file manager")]
 #[command(after_help = AFTER_HELP)]
+#[command(subcommand_required = true, arg_required_else_help = true)]
 pub struct Cli {
     #[command(subcommand)]
-    pub command: Option<Commands>,
+    pub command: Commands,
+}
 
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Create files and directories (default behavior)
+    #[command(alias = "c")]
+    Create(CreateArgs),
+
+    Completions {
+        #[arg(value_enum)]
+        shell: CompletionShell,
+    },
+}
+
+#[derive(Parser, Clone, Debug)]
+pub struct CreateArgs {
     /// Print created paths to stdout
     #[arg(short = 'p')]
     pub print_path: bool,
@@ -45,17 +61,8 @@ pub struct Cli {
     pub open_with: Option<Option<String>>,
 
     /// Paths to create
-    #[arg(trailing_var_arg = true)]
+    #[arg(trailing_var_arg = true, value_hint = ValueHint::Other)]
     pub paths: Vec<String>,
-}
-
-#[derive(Subcommand)]
-pub enum Commands {
-    /// Generate shell completion scripts (prints to stdout)
-    Completions {
-        #[arg(value_enum)]
-        shell: CompletionShell,
-    },
 }
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
@@ -65,7 +72,7 @@ pub enum CompletionShell {
     Fish,
 }
 
-impl Cli {
+impl CreateArgs {
     /// Returns true if open mode is enabled (-o flag was passed)
     pub fn open_mode(&self) -> bool {
         self.open_with.is_some()

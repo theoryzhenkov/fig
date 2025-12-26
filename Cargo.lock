@@ -163,6 +163,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
 
 [[package]]
+name = "fig"
+version = "0.2.3"
+dependencies = [
+ "clap",
+ "clap_complete",
+ "dirs",
+ "libc",
+ "open",
+ "serde",
+ "tempfile",
+ "toml",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -380,20 +394,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bf41e0cfaf7226dca15e8197172c295a782857fcb97fad1808a166870dee75a3"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "slap"
-version = "0.2.2"
-dependencies = [
- "clap",
- "clap_complete",
- "dirs",
- "libc",
- "open",
- "serde",
- "tempfile",
- "toml",
 ]
 
 [[package]]
